@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job & Gang Creator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div class="panel">
+            <header class="header">
+                <h1>Job & Gang Creator</h1>
+                <div class="header-actions">
+                    <button type="button" class="btn-menu-link" id="btnBossMenu" title="Open Boss Menu (manage employees, stash, society)">Boss Menu</button>
+                    <button type="button" class="btn-menu-link" id="btnGangMenu" title="Open Gang Menu (manage members, stash, society)">Gang Menu</button>
+                    <button type="button" class="btn-close" id="btnClose" aria-label="Close">&times;</button>
+                </div>
+            </header>
+
+            <div class="tabs">
+                <button type="button" class="tab active" data-tab="jobs">Jobs</button>
+                <button type="button" class="tab" data-tab="gangs">Gangs</button>
+                <button type="button" class="tab" data-tab="locations">Locations</button>
+            </div>
+
+            <div class="content">
+                <aside class="list-panel">
+                    <div class="list-header">
+                        <h2 id="listTitle">Jobs</h2>
+                        <button type="button" class="btn-add" id="btnNew">+ New</button>
+                    </div>
+                    <ul class="list" id="itemList"></ul>
+                </aside>
+
+                <main class="editor-panel" id="mainPanel">
+                    <div id="editorPlaceholder" class="editor-placeholder">
+                        <p>Select a job or gang from the list, or create a new one.</p>
+                    </div>
+                    <form id="editorForm" class="editor-form hidden">
+                        <input type="hidden" id="editId" name="id">
+                        <div class="field">
+                            <label for="editName">Name (id)</label>
+                            <input type="text" id="editName" name="name" placeholder="e.g. sheriff" required>
+                        </div>
+                        <div class="field">
+                            <label for="editLabel">Label (display name)</label>
+                            <input type="text" id="editLabel" name="label" placeholder="e.g. Valentine Sheriff">
+                        </div>
+                        <div id="jobOnlyFields" class="job-only">
+                            <div class="field row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="editDefaultDuty" name="defaultDuty" checked>
+                                    Default on duty
+                                </label>
+                            </div>
+                            <div class="field row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="editOffDutyPay" name="offDutyPay">
+                                    Pay when off duty
+                                </label>
+                            </div>
+                            <div class="field">
+                                <label for="editType">Type</label>
+                                <input type="text" id="editType" name="type" placeholder="e.g. none, law, medic">
+                            </div>
+                        </div>
+                        <div class="grades-section">
+                            <div class="grades-header">
+                                <h3>Grades</h3>
+                                <button type="button" class="btn-small" id="btnAddGrade">+ Add grade</button>
+                            </div>
+                            <div class="grades-table-wrap">
+                                <table class="grades-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Level</th>
+                                            <th>Name</th>
+                                            <th>Payment</th>
+                                            <th>Boss</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gradesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="editor-actions">
+                            <button type="button" class="btn btn-secondary" id="btnDelete">Delete</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                    <div id="locationsPanel" class="locations-panel hidden">
+                        <div class="locations-section">
+                            <h3>Boss Menu Locations</h3>
+                            <p class="locations-hint">Select the job this location is for, stand where you want the prompt, then click &quot;Add at my position&quot;.</p>
+                            <div class="location-add-row">
+                                <label class="location-select-label">Job:</label>
+                                <select id="selectBossJob" class="location-select">
+                                    <option value="">-- Select job --</option>
+                                </select>
+                                <button type="button" class="btn btn-small btn-add-location" id="btnAddBossLocation">+ Add at my position</button>
+                            </div>
+                            <ul class="locations-list" id="bossLocationsList"></ul>
+                        </div>
+                        <div class="locations-section">
+                            <h3>Gang Menu Locations</h3>
+                            <p class="locations-hint">Select the gang this location is for, stand where you want the prompt, then click &quot;Add at my position&quot;.</p>
+                            <div class="location-add-row">
+                                <label class="location-select-label">Gang:</label>
+                                <select id="selectGangGang" class="location-select">
+                                    <option value="">-- Select gang --</option>
+                                </select>
+                                <button type="button" class="btn btn-small btn-add-location" id="btnAddGangLocation">+ Add at my position</button>
+                            </div>
+                            <ul class="locations-list" id="gangLocationsList"></ul>
+                        </div>
+                    </div>
+                    <div id="toast" class="toast hidden"></div>
+                </main>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
