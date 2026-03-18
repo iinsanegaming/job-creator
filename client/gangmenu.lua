@@ -3,13 +3,75 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 local PlayerGang = RSGCore.Functions.GetPlayerData().gang
 local isFromCommand = false
 local CurrentGangLocations = {}
+local CurrentGangBlips = {}
 local ConfigGang = Config.GangMenu or {}
 local function L(k) return locale('gang', k) end
+
+local GangMemberBlips = {} -- key: serverId, value: blip handle
+
+local function ClearGangMemberBlips()
+    for _, blip in pairs(GangMemberBlips) do
+        pcall(function() RemoveBlip(blip) end)
+    end
+    GangMemberBlips = {}
+end
+
+local function UpdateGangMemberBlips(members)
+    members = members or {}
+
+    -- Build a set of current member server ids.
+    local keep = {}
+    for _, m in ipairs(members) do
+        if m and m.source then
+            keep[m.source] = true
+        end
+    end
+
+    -- Remove blips for players that are no longer in the list.
+    for sid, blip in pairs(GangMemberBlips) do
+        if not keep[sid] then
+            pcall(function() RemoveBlip(blip) end)
+            GangMemberBlips[sid] = nil
+        end
+    end
+
+    -- Create/update blips.
+    for _, m in ipairs(members) do
+        local sid = m.source
+        if sid then
+            local pid = GetPlayerFromServerId(sid)
+            local ped = pid and GetPlayerPed(pid) or 0
+            if ped and ped ~= 0 then
+                local coords = GetEntityCoords(ped)
+
+                if not GangMemberBlips[sid] then
+                    local blip = BlipAddForCoords(1664425300, coords.x, coords.y, coords.z)
+                    SetBlipSprite(blip, GetHashKey('blip_ambient_companion'))
+                    SetBlipScale(blip, 0.6)
+                    if m.name then SetBlipName(blip, m.name) end
+                    GangMemberBlips[sid] = blip
+                else
+                    SetBlipCoords(GangMemberBlips[sid], coords.x, coords.y, coords.z)
+                    if m.name then SetBlipName(GangMemberBlips[sid], m.name) end
+                end
+            else
+                -- Player not found locally (or not streamed yet).
+                if GangMemberBlips[sid] then
+                    pcall(function() RemoveBlip(GangMemberBlips[sid]) end)
+                    GangMemberBlips[sid] = nil
+                end
+            end
+        end
+    end
+end
 
 local function CoordsFromTable(t)
     if not t or type(t) ~= 'table' then return vector3(0, 0, 0) end
     return vector3(tonumber(t.x) or 0, tonumber(t.y) or 0, tonumber(t.z) or 0)
 end
+
+-- Forward declaration so ApplyGangLocations can call it.
+local ApplyGangBlips
 
 local function ApplyGangLocations()
     for _, v in pairs(CurrentGangLocations) do
@@ -23,6 +85,51 @@ local function ApplyGangLocations()
             event = 'jobcreator:gangmenu:client:mainmenu',
             args = gangFilter and { gangFilter } or {},
         })
+    end
+    -- Rebuild blips whenever locations are updated.
+    ApplyGangBlips()
+end
+
+local function RemoveGangBlips()
+    for _, blip in pairs(CurrentGangBlips) do
+        pcall(function() RemoveBlip(blip) end)
+    end
+    CurrentGangBlips = {}
+end
+
+ApplyGangBlips = function()
+    RemoveGangBlips()
+    if not CurrentGangLocations then return end
+    local coordsToBlip = function(v)
+        local c = CoordsFromTable(v.coords)
+        local sprite = GetHashKey('blip_ambient_shop')
+        local blip = BlipAddForCoord(sprite, c.x, c.y, c.z)
+        if v.blipname then SetBlipName(blip, v.blipname) end
+        if SetBlipScale then SetBlipScale(blip, 0.6) end
+        return blip
+    end
+
+    for _, v in pairs(CurrentGangLocations) do
+        local shouldShow = false
+
+        -- If configured to show for everyone, ignore gang matching.
+        if v.blipforall == true then
+            shouldShow = true
+        else
+            -- Default behavior: only show to gang bosses that belong to this gang.
+            if PlayerGang and PlayerGang.name and v.gang and v.gang ~= '' then
+                if PlayerGang.isboss then
+                    shouldShow = PlayerGang.name == v.gang
+                end
+            elseif PlayerGang and PlayerGang.isboss and (not v.gang or v.gang == '') then
+                shouldShow = true
+            end
+        end
+
+        if shouldShow and v.id then
+            local blip = coordsToBlip(v)
+            CurrentGangBlips[v.id] = blip
+        end
     end
 end
 
@@ -38,6 +145,7 @@ AddEventHandler('onResourceStop', function(resource)
         for _, v in pairs(CurrentGangLocations) do
             pcall(function() exports['rsg-core']:deletePrompt(v.id) end)
         end
+        RemoveGangBlips()
     end
 end)
 
@@ -52,6 +160,24 @@ end)
 
 RegisterNetEvent('RSGCore:Client:OnGangUpdate', function(GangInfo)
     PlayerGang = GangInfo
+    -- Update blips when the player switches gangs.
+    ApplyGangBlips()
+end)
+
+-- Sync gang member blips periodically
+CreateThread(function()
+    while true do
+        Wait(5000)
+        if PlayerGang and PlayerGang.name and PlayerGang.name ~= '' and PlayerGang.name ~= 'none' then
+            RSGCore.Functions.TriggerCallback('jobcreator:gangmenu:server:GetOnlineGangMembers', function(members)
+                UpdateGangMemberBlips(members)
+            end, PlayerGang.name)
+        else
+            if next(GangMemberBlips) then
+                ClearGangMemberBlips()
+            end
+        end
+    end
 end)
 
 local function comma_valueGang(amount)
