@@ -486,7 +486,7 @@
             name: gangName,
             gang: gangId,
             blipname: gangName,
-            showblip: false,
+            showblip: true,
             blipforall: false,
         }).then(function (res) {
             if (res && res.success) {
