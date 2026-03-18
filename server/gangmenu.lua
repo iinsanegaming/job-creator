@@ -206,6 +206,34 @@ RSGCore.Functions.CreateCallback('jobcreator:gangmenu:getplayers', function(sour
     cb(players)
 end)
 
+-- Online gang member blips support (client requests list of online members in the same gang)
+RSGCore.Functions.CreateCallback('jobcreator:gangmenu:server:GetOnlineGangMembers', function(source, cb, gangName)
+    local srcPlayer = RSGCore.Functions.GetPlayer(source)
+    if not srcPlayer or not srcPlayer.PlayerData or not srcPlayer.PlayerData.gang then cb({}) return end
+
+    local g = gangName or (srcPlayer.PlayerData.gang and srcPlayer.PlayerData.gang.name)
+    if not g or g == '' or g == 'none' then cb({}) return end
+
+    local members = {}
+    for _, id in pairs(RSGCore.Functions.GetPlayers()) do
+        local p = RSGCore.Functions.GetPlayer(id)
+        if p and p.PlayerData and p.PlayerData.gang and p.PlayerData.gang.name == g then
+            local first = p.PlayerData.charinfo and p.PlayerData.charinfo.firstname or ''
+            local last = p.PlayerData.charinfo and p.PlayerData.charinfo.lastname or ''
+            local name = (first .. ' ' .. last):gsub('^%s+', ''):gsub('%s+$', '')
+            if name == '' then name = 'Unknown' end
+
+            members[#members + 1] = {
+                source = id,
+                name = name,
+            }
+        end
+    end
+
+    table.sort(members, function(a, b) return a.name < b.name end)
+    cb(members)
+end)
+
 -- Admin command to remove player from gang
 RSGCore.Commands.Add('removegang', locale('gang', 'sv_admin_usage'), { { name = 'id', help = 'Player ID' }, { name = 'gang', help = 'Gang ID' } }, false, function(source, args)
     local src = source
