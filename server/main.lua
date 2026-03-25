@@ -17,6 +17,16 @@ local function EnsureDataDir()
     end
 end
 
+-- NUI may send level 0; in Lua `0 or x` is `x` and `if 0 then` is false — never use `or` / truthiness on grade levels.
+local function GradeLevelFromPayload(g)
+    if not g or type(g) ~= 'table' then return nil end
+    if g.level ~= nil then
+        local n = tonumber(g.level)
+        if n ~= nil then return n end
+    end
+    return tonumber(g.grade)
+end
+
 local function LoadCustomData()
     local path = GetDataPath()
     local f = io.open(path, 'r')
@@ -228,11 +238,14 @@ local function RegisterCustomJobs()
         end
         local grades = {}
         for _, g in ipairs(job.grades or {}) do
-            grades[tostring(g.level)] = {
-                name = g.name or 'Grade ' .. g.level,
-                payment = tonumber(g.payment) or 0,
-                isboss = g.isboss or false,
-            }
+            local lv = GradeLevelFromPayload(g)
+            if lv ~= nil and lv >= 0 then
+                grades[tostring(lv)] = {
+                    name = g.name or 'Grade ' .. lv,
+                    payment = tonumber(g.payment) or 0,
+                    isboss = g.isboss or false,
+                }
+            end
         end
         local ok, err = pcall(function()
             exports['rsg-core']:AddJob(name, {
@@ -257,11 +270,14 @@ local function RegisterCustomGangs()
         end
         local grades = {}
         for _, g in ipairs(gang.grades or {}) do
-            grades[tostring(g.level)] = {
-                name = g.name or 'Grade ' .. g.level,
-                payment = tonumber(g.payment) or 0,
-                isboss = g.isboss or false,
-            }
+            local lv = GradeLevelFromPayload(g)
+            if lv ~= nil and lv >= 0 then
+                grades[tostring(lv)] = {
+                    name = g.name or 'Grade ' .. lv,
+                    payment = tonumber(g.payment) or 0,
+                    isboss = g.isboss or false,
+                }
+            end
         end
         local ok, err = pcall(function()
             exports['rsg-core']:AddGang(name, {
@@ -343,8 +359,8 @@ RegisterNetEvent('jobcreator:server:saveJob', function(data)
     end
     local grades = {}
     for _, g in ipairs(data.grades or {}) do
-        local level = tonumber(g.level)
-        if level and level >= 0 then
+        local level = GradeLevelFromPayload(g)
+        if level ~= nil and level >= 0 then
             grades[#grades + 1] = {
                 level = level,
                 name = g.name or ('Grade ' .. level),
@@ -401,8 +417,8 @@ RegisterNetEvent('jobcreator:server:saveGang', function(data)
     end
     local grades = {}
     for _, g in ipairs(data.grades or {}) do
-        local level = tonumber(g.level)
-        if level and level >= 0 then
+        local level = GradeLevelFromPayload(g)
+        if level ~= nil and level >= 0 then
             grades[#grades + 1] = {
                 level = level,
                 name = g.name or ('Grade ' .. level),
@@ -413,7 +429,7 @@ RegisterNetEvent('jobcreator:server:saveGang', function(data)
     end
     table.sort(grades, function(a, b) return a.level < b.level end)
     if #grades == 0 then
-        grades = { { level = 0, name = 'Recruit', payment = 0, isboss = false } }
+        grades = { { level = 0, name = 'Recruit', payment = 0, isboss = true } }
     end
     local gang = {
         name = name,

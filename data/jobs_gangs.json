@@ -1,1 +1,1 @@
-{"jobs":{"valbakery":{"deleted":true}},"gangs":{"test":{"deleted":true},"watson":{"deleted":true}}}
+{"gangs":{"test":{"deleted":true},"test1":{"deleted":true},"watson":{"deleted":true}},"jobs":{"valgunsmith":{"deleted":true},"valgunsmith1":{"name":"valgunsmith1","label":"Valentine Gunsmith","grades":[{"name":"Work","level":0,"isboss":false,"payment":5},{"name":"Gunsmith","level":1,"isboss":false,"payment":10},{"name":"Owner","level":2,"isboss":true,"payment":15}],"defaultDuty":false,"offDutyPay":false,"type":"gunsmith"},"valbakery":{"deleted":true}}}

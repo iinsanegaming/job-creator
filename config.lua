@@ -6,7 +6,7 @@ Config.OpenCommand = 'jobcreator'
 
 -- Lock to character(s): only these citizenids can open the Job & Gang Creator and place boss/gang locations.
 -- Add your character's CitizenID (from Admin Player Info or database). Use {} to allow everyone.
-Config.AllowedCitizenIds = { 'NUS27608' } -- Your character; add more IDs to allow others
+Config.AllowedCitizenIds = { 'FNQ93860' } -- Your character; add more IDs to allow others
 
 -- Path to store custom jobs/gangs (relative to resource)
 Config.DataFile = 'data/jobs_gangs.json'

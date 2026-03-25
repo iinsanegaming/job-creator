@@ -147,7 +147,7 @@
         const levelTd = document.createElement('td');
         const levelInput = document.createElement('input');
         levelInput.type = 'number';
-        levelInput.value = grade && grade.grade || 0;
+        levelInput.value = (grade && (grade.level != null ? grade.level : grade.grade)) || 0;
         levelInput.className = 'input-small';
         levelTd.appendChild(levelInput);
 
@@ -199,7 +199,7 @@
             const boss = !!inputs[3].checked;
             if (!name) return;
             grades.push({
-                grade: level,
+                level: level,
                 name: name,
                 payment: payment,
                 isboss: boss,
@@ -260,8 +260,10 @@
             grades.forEach(function (g) {
                 addGradeRow(g);
             });
+        } else if (currentTab === 'gangs') {
+            addGradeRow({ level: 0, name: 'Recruit', payment: 0, isboss: true });
         } else {
-            addGradeRow({ grade: 0, name: 'Worker', payment: 0, isboss: true });
+            addGradeRow({ level: 0, name: 'Freelancer', payment: 0, isboss: false });
         }
     }
 
@@ -348,7 +350,7 @@
 
     // Events
     btnAddGrade.addEventListener('click', function () {
-        addGradeRow({ grade: 0, name: '', payment: 0, isboss: false });
+        addGradeRow({ level: 0, name: '', payment: 0, isboss: false });
     });
 
     editorForm.addEventListener('submit', function (e) {
